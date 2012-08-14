@@ -126,8 +126,11 @@ NSString *cutoffDate(double limit) {
   
   sitesDataTimer = [self startTimerWithMethod:@selector(loadStackExchangeNetworkSites) andInterval:60*24];
   
-  // initialise Growl
-  [GrowlApplicationBridge setGrowlDelegate:self];
+  
+	
+	[GrowlApplicationBridge setGrowlDelegate:self];
+	[[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
+	
 
   // experimental
 //  [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
@@ -239,6 +242,7 @@ NSString *cutoffDate(double limit) {
         title = [NSString stringWithFormat:@"%d", dif];
       }
       
+		if ([[NSUserDefaults standardUserDefaults] boolForKey:@"UseGrowl"]) {
       [GrowlApplicationBridge notifyWithTitle:title
                                   description:@""
                              notificationName:@"Reputation Change"
@@ -246,6 +250,12 @@ NSString *cutoffDate(double limit) {
                                      priority:0
                                      isSticky:FALSE
                                  clickContext:url];
+		} else {
+			NSUserNotification *notification = [[NSUserNotification alloc] init];
+			notification.title = title;
+			notification.userInfo = [NSDictionary dictionaryWithObject:url forKey:@"URL"];
+			[[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
+		}
     }
   }
   
@@ -288,21 +298,21 @@ NSString *cutoffDate(double limit) {
     newSize.width = 22;
     [image setSize:newSize];
     
-    [item setTitle:title];
-    [item setImage:image];
-    [image release];
+	  [item setTitle:title];
+	  [item setImage:image];
+	  [image release];
   }
 }
 
 - (void)clickReputation:(id)sender {
-  NSArray *sites = [persistence objectForKey:@"most_used_sites"];
-  int index = [sender tag] - 110;
-  NSString *siteUrl = [sites objectAtIndex:index];
-  NSDictionary *site = [persistence siteForKey:siteUrl];
-  NSObject *userId = [site objectForKey:@"user_id"];
-  
-  NSString *url = [NSString stringWithFormat:@"%@/users/%@?tab=reputation", siteUrl, userId];
-  [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
+	NSArray *sites = [persistence objectForKey:@"most_used_sites"];
+	int index = [sender tag] - 110;
+	NSString *siteUrl = [sites objectAtIndex:index];
+	NSDictionary *site = [persistence siteForKey:siteUrl];
+	NSObject *userId = [site objectForKey:@"user_id"];
+	
+	NSString *url = [NSString stringWithFormat:@"%@/users/%@?tab=reputation", siteUrl, userId];
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
 }
 
 - (IBAction)retrieveQuestions:(id)sender {
@@ -382,6 +392,7 @@ NSString *cutoffDate(double limit) {
     NSString *url = [NSString stringWithFormat:@"%@/questions/%@", [site objectForKey:@"site_url"], questionId];
     NSString *title = [tags componentsJoinedByString:@", "];
 
+	  if ([[NSUserDefaults standardUserDefaults] boolForKey:@"UseGrowl"]) {
     [GrowlApplicationBridge notifyWithTitle:title
                                 description:prepareHTML([question objectForKey:@"title"])
                            notificationName:@"New Question"
@@ -389,6 +400,13 @@ NSString *cutoffDate(double limit) {
                                    priority:0
                                    isSticky:FALSE
                                clickContext:url];
+	  } else {
+		  NSUserNotification *notification = [[NSUserNotification alloc] init];
+		  notification.title = title;
+		  notification.informativeText = prepareHTML([question objectForKey:@"title"]);
+		  notification.userInfo = [NSDictionary dictionaryWithObject:url forKey:@"URL"];
+		  [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
+	  }
   }
 }
 
@@ -439,7 +457,9 @@ NSString *cutoffDate(double limit) {
   [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:clickContext]];
 }
 
-
+- (void)userNotificationCenter:(NSUserNotificationCenter *)center didActivateNotification:(NSUserNotification *)notification {
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:[notification.userInfo objectForKey:@"URL"]]];
+}
 
 - (NSTimer *)startTimerWithMethod:(SEL)selector
                       andInterval:(double)interval {
@@ -580,6 +600,7 @@ NSString *cutoffDate(double limit) {
     // you can go to the url /questions/{answer_id} and you'll be redirected to the correct question
     NSString *url = [NSString stringWithFormat:@"%@/questions/%@", [site objectForKey:@"site_url"], [comment objectForKey:@"post_id"]];
   
+	  if ([[NSUserDefaults standardUserDefaults] boolForKey:@"UseGrowl"]) {
     [GrowlApplicationBridge notifyWithTitle:[NSString stringWithFormat:@"Comment from %@", from]
                                 description:text
                            notificationName:@"New Comment"
@@ -587,6 +608,13 @@ NSString *cutoffDate(double limit) {
                                    priority:0
                                    isSticky:TRUE
                                clickContext:url];
+	  } else {
+		  NSUserNotification *notification = [[NSUserNotification alloc] init];
+		  notification.title = [NSString stringWithFormat:@"Comment from %@", from];
+		  notification.informativeText = text;
+		  notification.userInfo = [NSDictionary dictionaryWithObject:url forKey:@"URL"];
+		  [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
+	  }
   }
 }
 
@@ -644,6 +672,7 @@ NSString *cutoffDate(double limit) {
     // you can go to the url /questions/{answer_id} and you'll be redirected to the correct question
     NSString *url = [NSString stringWithFormat:@"%@/questions/%@", [site objectForKey:@"site_url"], answerId];
     
+	  if ([[NSUserDefaults standardUserDefaults] boolForKey:@"UseGrowl"]) {
     [GrowlApplicationBridge notifyWithTitle:[NSString stringWithFormat:@"A new answer by %@", from]
                                 description:@""
                            notificationName:@"New Answer"
@@ -651,7 +680,13 @@ NSString *cutoffDate(double limit) {
                                    priority:0
                                    isSticky:TRUE
                                clickContext:url];
-  }  
+	  } else {
+		  NSUserNotification *notification = [[NSUserNotification alloc] init];
+		  notification.title = [NSString stringWithFormat:@"A new answer by %@", from];
+		  notification.userInfo = [NSDictionary dictionaryWithObject:url forKey:@"URL"];
+		  [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
+	  }
+  }
 }
 
 

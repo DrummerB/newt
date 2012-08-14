@@ -77,6 +77,7 @@
     [launchOnStartup setState:1];
   }
 
+	useNotificationCenterCheck.state = ![[NSUserDefaults standardUserDefaults] boolForKey:@"UseGrowl"] ? NSOnState : NSOffState;
   
   NSData *flair = [persistence objectForKey:@"user_flair"];
   if (flair != nil) {
@@ -186,6 +187,10 @@
     
     CFRelease(loginItems);
   }
+}
+
+- (IBAction)updateNotificationOption:(id)sender {
+	[[NSUserDefaults standardUserDefaults] setBool:(useNotificationCenterCheck.state == NSOffState) forKey:@"UseGrowl"];
 }
 
 - (LSSharedFileListItemRef)findStartupItem:(NSString *)appPath {

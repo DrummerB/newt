@@ -48,6 +48,7 @@
   IBOutlet NSProgressIndicator *profileProgressIndicator;
   IBOutlet NSButton *searchUserButton;
   IBOutlet NSTextField *profileSearchError;
+	IBOutlet NSButton *useNotificationCenterCheck;
   
   int activity;
   
@@ -65,6 +66,7 @@
 - (IBAction)updateStartupLaunchAction:(id)sender;
 - (IBAction)selectUserButton:(id)sender;
 - (IBAction)confirmUserSelection:(id)sender;
+- (IBAction)updateNotificationOption:(id)sender;
 
 - (void)displayPreferences;
 - (void)closePreferences;

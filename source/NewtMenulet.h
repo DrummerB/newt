@@ -37,7 +37,7 @@
 //- (id)initWithApp:(id *)mainObject;
 //@end
 
-@interface NewtMenulet : NSObject <GrowlApplicationBridgeDelegate> {
+@interface NewtMenulet : NSObject <GrowlApplicationBridgeDelegate, NSUserNotificationCenterDelegate> {
   IBOutlet NSMenu *theMenu;
   IBOutlet NSMenuItem *disableButton;
   IBOutlet NSMenuItem *silentButton;
